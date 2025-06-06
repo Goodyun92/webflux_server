@@ -38,8 +38,8 @@ public class AnswerReactiveController extends Controller {
     }
 
     // SSE 구독 엔드포인트
-    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> uploadStream(@RequestParam String taskId) {
+    @GetMapping(value = "/stream/{taskId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> uploadStream(@PathVariable String taskId) {
         return answerReactiveService.answerTaskFlux(taskId);
     }
 }
