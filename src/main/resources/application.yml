@@ -27,9 +27,9 @@ spring:
 
 flask:
   upload:
-    base-url: http://3.38.8.140:8000
+    base-url: http://127.0.0.1:8082
   similarity:
-    base-url: http://3.38.8.140:8000
+    base-url: http://127.0.0.1:8082
 
 model:
   base-url: http://3.38.8.140:8000

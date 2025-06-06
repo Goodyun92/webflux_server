@@ -6,6 +6,4 @@ import lombok.Data;
 public class UploadRequestDto {
 
     String documentUrl;
-
-    String title;
 }

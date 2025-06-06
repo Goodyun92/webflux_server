@@ -2,6 +2,7 @@ package com.ls.webflux_server.upload.service;
 
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
@@ -12,8 +13,11 @@ import reactor.core.scheduler.Schedulers;
 import java.io.File;
 import java.io.FileOutputStream;
 
+import static java.lang.Boolean.FALSE;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PdfValidatorService {
 
     private final WebClient.Builder webClientBuilder;
@@ -21,9 +25,11 @@ public class PdfValidatorService {
 
     public Mono<Boolean> isPdfValid(String pdfUrl) {
 
+        log.info("isPdfValid called with pdfUrl: {}", pdfUrl);
+
         // 확장자 검사 (대소문자 무시, 공백 제거)
         if (pdfUrl == null || !pdfUrl.trim().toLowerCase().endsWith(".pdf")) {
-            return Mono.just(false);
+            return Mono.just(FALSE);
         }
 
         final WebClient webClient = webClientBuilder.baseUrl(pdfUrl).build();

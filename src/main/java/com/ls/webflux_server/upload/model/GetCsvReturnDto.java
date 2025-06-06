@@ -1,10 +1,11 @@
 package com.ls.webflux_server.upload.model;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
-@Getter
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GetCsvReturnDto {
     String csv_url;
 }
