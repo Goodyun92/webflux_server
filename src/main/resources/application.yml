@@ -1,0 +1,35 @@
+server:
+  port: 8081
+  netty:
+    connection-timeout: 10s
+    idle-timeout: 120s
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 4
+        failureRateThreshold: 50
+        waitDurationInOpenState : 30s
+    instances:
+      lsls:
+        baseConfig: default
+
+spring:
+  application:
+    name: webflux_server
+
+
+flask:
+  upload:
+    base-url: http://3.38.8.140:8000
+  similarity:
+    base-url: http://3.38.8.140:8000
+
+model:
+  base-url: http://3.38.8.140:8000
