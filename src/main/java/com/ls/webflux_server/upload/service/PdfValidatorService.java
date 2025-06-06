@@ -21,6 +21,11 @@ public class PdfValidatorService {
 
     public Mono<Boolean> isPdfValid(String pdfUrl) {
 
+        // 확장자 검사 (대소문자 무시, 공백 제거)
+        if (pdfUrl == null || !pdfUrl.trim().toLowerCase().endsWith(".pdf")) {
+            return Mono.just(false);
+        }
+
         final WebClient webClient = webClientBuilder.baseUrl(pdfUrl).build();
 
         // 1. WebClient로 PDF 다운로드 (논블로킹)
