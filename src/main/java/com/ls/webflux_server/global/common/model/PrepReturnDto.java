@@ -11,5 +11,8 @@ public class PrepReturnDto {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     String taskId;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    String csvUrl;
+
     String message;
 }

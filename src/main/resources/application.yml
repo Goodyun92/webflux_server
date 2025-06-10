@@ -23,6 +23,12 @@ resilience4j:
 spring:
   application:
     name: webflux_server
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+  cache:
+    type: redis
 
 
 flask:

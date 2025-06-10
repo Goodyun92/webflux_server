@@ -18,7 +18,7 @@ public class UploadReactiveController {
 
     @PostMapping("/prep")
     public Mono<PrepReturnDto> UploadPrep(@RequestBody UploadRequestDto dto) {
-        return uploadReactiveService.validatePdf(dto);
+        return uploadReactiveService.uploadPrep(dto);
     }
 
     // SSE 구독 엔드포인트

@@ -1,10 +1,12 @@
 package com.ls.webflux_server.upload.service;
 
 import com.ls.webflux_server.sse.BaseSseTaskService;
+import com.ls.webflux_server.upload.domain.CompletedPdf;
 import com.ls.webflux_server.upload.model.GetCsvRequestDto;
 import com.ls.webflux_server.upload.model.GetCsvReturnDto;
 import com.ls.webflux_server.upload.model.UploadRequestDto;
 import com.ls.webflux_server.global.common.model.PrepReturnDto;
+import com.ls.webflux_server.upload.repository.CompletedPdfRepository;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
@@ -39,13 +41,27 @@ public class UploadReactiveService extends BaseSseTaskService {
 
     private final CircuitBreaker llmCircuitBreaker;
 
+    private final CompletedPdfService completedPdfService;
+
     @Value("${flask.upload.base-url}")
     private String baseUrl;
 
     private final Map<String, String> uploadTask = new ConcurrentHashMap<>();
 
-    public Mono<PrepReturnDto> validatePdf(UploadRequestDto dto) {
-//        임시 주석 처리
+    public Mono<PrepReturnDto> uploadPrep(UploadRequestDto dto) {
+
+        // 캐싱되어 있는 이미 작업 성공한 pdf 의 경우 바로 리턴
+        Optional<CompletedPdf> completedPdfOpt = completedPdfService.getCompletedPdfByDocumentUrl(dto.getDocumentUrl());
+        if (completedPdfOpt.isPresent()) {
+            return Mono.just(
+                    PrepReturnDto.builder()
+                            .csvUrl(completedPdfOpt.get().getCsv())
+                            .message("LLM 작업 성공하였습니다.")
+                            .build()
+            );
+        }
+
+//        테스트, 임시 주석 처리
 //        return pdfValidatorService.isPdfValid(dto.getDocumentUrl())
 //                .map(valid -> {
 //                    if (!valid) {
@@ -143,13 +159,22 @@ public class UploadReactiveService extends BaseSseTaskService {
                 .subscribe(
                         result -> {
                             log.info("LLM 응답: {}", result);
-                            String doneJson = switch (result.getCsv_url()) {
+
+                            String doneJson;
+
+                            switch (result.getCsv_url()) {
                                 case "circuitbreaker_open" ->
-                                        "{\"status\":\"FAIL\",\"reason\":\"CIRCUIT_BREAKER\",\"message\":\"LLM 서버가 일시적으로 차단되었습니다. 잠시 후 다시 시도해주세요.\"}";
+                                        doneJson = "{\"status\":\"FAIL\",\"reason\":\"CIRCUIT_BREAKER\",\"message\":\"LLM 서버가 일시적으로 차단되었습니다. 잠시 후 다시 시도해주세요.\"}";
                                 case "llm_error" ->
-                                        "{\"status\":\"FAIL\",\"reason\":\"LLM_ERROR\",\"message\":\"LLM 서버 호출 중 오류가 발생했습니다.\"}";
-                                default -> "{\"status\":\"DONE\",\"csvUrl\":\"" + result.getCsv_url() + "\"}";
+                                        doneJson = "{\"status\":\"FAIL\",\"reason\":\"LLM_ERROR\",\"message\":\"LLM 서버 호출 중 오류가 발생했습니다.\"}";
+                                default -> {
+                                    // 캐싱 저장
+                                    completedPdfService.saveCompletedPdf(taskId, documentUrl, result.getCsv_url());
+                                    doneJson= "{\"status\":\"DONE\",\"csvUrl\":\"" + result.getCsv_url() + "\"}";
+                                }
                             };
+
+
                             super.notifyCompletion(taskId, doneJson);
 
                             // 작업 완료 후 taskId 제거
